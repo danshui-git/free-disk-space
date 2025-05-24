@@ -224,6 +224,7 @@ if [[ ${REMOVE_FOLDERS} != "false" ]]; then
     done
 fi
 if [[ ${REMOVE_DOCKER} == "true" ]]; then
+    echo "📦 Removing docker image"
     sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
     sudo docker image prune --all --force
 fi
