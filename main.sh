@@ -193,6 +193,12 @@ function remove_folder(){
     update_and_echo_free_space "after"
 }
 
+function remove_docker_image(){
+    echo "📁 Removing Removing docker image"
+    sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+    sudo docker image prune --all --force
+}
+
 # Remove Libraries
 if [[ ${ANDROID_FILES} == "true" ]]; then
     remove_android_library_folder
@@ -224,8 +230,6 @@ if [[ ${REMOVE_FOLDERS} != "false" ]]; then
     done
 fi
 if [[ ${REMOVE_DOCKER} == "true" ]]; then
-    echo "📦 Removing docker image"
-    sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
-    sudo docker image prune --all --force
+    remove_docker_image
 fi
 echo "Total Free Space: ${TOTAL_FREE_SPACE} MB"
