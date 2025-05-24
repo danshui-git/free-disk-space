@@ -30,6 +30,9 @@ fi
 if [[ -z "${TESTING}" ]]; then
     TESTING="false"
 fi
+if [[ -z "${REMOVE_DOCKER}" ]]; then
+    REMOVE_DOCKER="false"
+fi
 if [[ ${TESTING} == "true" ]]; then
     echo "Testing Mode"
     alias rm='echo rm'
@@ -227,5 +230,9 @@ if [[ ${REMOVE_FOLDERS} != "false" ]]; then
     for FOLDER in ${REMOVE_FOLDERS}; do
         remove_folder "${FOLDER}"
     done
+fi
+if [[ ${REMOVE_DOCKER} == "true" ]]; then
+    sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+    sudo docker image prune --all --force
 fi
 echo "Total Free Space: ${TOTAL_FREE_SPACE} MB"
