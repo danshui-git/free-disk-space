@@ -85,21 +85,13 @@ TOTAL_FREE_SPACE=0
 
 # Verify Needed Packages
 
-# Verify BC
-COMMAND_AWK=$(command -v awk)
-if ! [[ -x "${COMMAND_AWK}" ]]; then
-    echo 'Error: 没有安装awk.' >&2
-fi
-
-# Functions
-
 function verify_free_disk_space(){
     FREE_SPACE_TMP=$(df -B1 "${PRINCIPAL_DIR}")
     echo "${FREE_SPACE_TMP}" | awk 'NR==2 {print $4}'
 }
 
 function convert_bytes_to_mb(){
-    echo "$1" | awk '{printf "%.2f\n", $1 / 1024 / 1024}'
+    awk -v bytes="$1" 'BEGIN{printf "%.2f", bytes/1024/1024}'
 }
 
 function verify_free_space_in_mb(){
@@ -115,10 +107,10 @@ function update_and_echo_free_space(){
     else
         SPACE_AFTER=$(verify_free_space_in_mb)
         LINUX_TIMESTAMP_AFTER=$(date +%s)
-        FREEUP_SPACE=$(echo "${SPACE_AFTER} ${SPACE_BEFORE}" | awk '{printf "%.2f\n", $1 - $2}')
+        FREEUP_SPACE=$(awk -v after="$SPACE_AFTER" -v before="$SPACE_BEFORE" 'BEGIN{printf "%.2f", after-before}')
         echo "FreeUp Space: ${FREEUP_SPACE} MB"
         echo "Time Elapsed: $((LINUX_TIMESTAMP_AFTER - LINUX_TIMESTAMP_BEFORE)) seconds"
-        TOTAL_FREE_SPACE=$(echo "${TOTAL_FREE_SPACE} ${FREEUP_SPACE}" | awk '{printf "%.2f\n", $1 + $2}')
+        TOTAL_FREE_SPACE=$(awk -v total="$TOTAL_FREE_SPACE" -v free="$FREEUP_SPACE" 'BEGIN{printf "%.2f", total+free}')
     fi
 }
 
