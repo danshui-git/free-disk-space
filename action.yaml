@@ -67,6 +67,10 @@ runs:
       env:
         GITHUB_ACTION_PATH: ${{ github.action_path }}
 
+    - name: Set script permissions
+      run: chmod 755 main.sh
+      shell: bash
+
     - shell: bash
       name: "Free Disk Space"
       id: free-disk-space
