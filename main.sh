@@ -196,7 +196,6 @@ function remove_folder(){
 
 function remove_docker_image(){
     echo "📁 Removing docker image"
-    sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
     sudo docker image prune --all --force
 }
 
