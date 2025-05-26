@@ -55,9 +55,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout Action Repository
-      uses: actions/checkout@v4
-
     - name: Set script permissions
       run: |
         ACTION_PATH="${{ github.action_path }}"
