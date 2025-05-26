@@ -52,29 +52,33 @@ inputs:
     required: false
     default: "false"
 
-# outputs:
-#   saved-space:
-#     description: "The amount of space saved"
-#     value: ${{ steps.free-disk-space.outputs.saved-space }}
-
 runs:
   using: "composite"
   steps:
-
-    - name: Set GitHub Path
-      run: echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH
+    - name: Checkout Action Repository
+      uses: actions/checkout@v4
+      
+    - name: Debug - List Files in Action Directory
+      run: |
+        echo "Files in ${{ github.action_path }}:"
+        ls -la ${{ github.action_path }}
       shell: bash
-      env:
-        GITHUB_ACTION_PATH: ${{ github.action_path }}
 
     - name: Set script permissions
-      run: chmod 755 ${{ github.action_path }}/main.sh
+      run: |
+        ACTION_PATH="${{ github.action_path }}"
+        echo "Setting permissions for $ACTION_PATH/main.sh"
+        chmod 755 "$ACTION_PATH/main.sh"
+        ls -la "$ACTION_PATH/main.sh"
       shell: bash
 
     - shell: bash
       name: "Free Disk Space"
       id: free-disk-space
-      run: ${{ github.action_path }}/main.sh
+      run: |
+        ACTION_PATH="${{ github.action_path }}"
+        echo "Running script from $ACTION_PATH/main.sh"
+        "$ACTION_PATH/main.sh"
       env:
         PRINCIPAL_DIR: ${{ inputs.principal_dir }}
         ANDROID_FILES: ${{ inputs.remove_android }}
