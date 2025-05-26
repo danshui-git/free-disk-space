@@ -57,19 +57,12 @@ runs:
   steps:
     - name: Checkout Action Repository
       uses: actions/checkout@v4
-      
-    - name: Debug - List Files in Action Directory
-      run: |
-        echo "Files in ${{ github.action_path }}:"
-        ls -la ${{ github.action_path }}
-      shell: bash
 
     - name: Set script permissions
       run: |
         ACTION_PATH="${{ github.action_path }}"
         echo "Setting permissions for $ACTION_PATH/main.sh"
         chmod 755 "$ACTION_PATH/main.sh"
-        ls -la "$ACTION_PATH/main.sh"
       shell: bash
 
     - shell: bash
