@@ -55,20 +55,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set script permissions
-      run: |
-        ACTION_PATH="${{ github.action_path }}"
-        echo "Setting permissions for $ACTION_PATH/main.sh"
-        chmod 755 "$ACTION_PATH/main.sh"
-      shell: bash
-
     - shell: bash
       name: "Free Disk Space"
       id: free-disk-space
       run: |
         ACTION_PATH="${{ github.action_path }}"
-        echo "Running script from $ACTION_PATH/main.sh"
-        "$ACTION_PATH/main.sh"
+        cd "$ACTION_PATH"
+        chmod +x main.sh
+        ./main.sh
       env:
         PRINCIPAL_DIR: ${{ inputs.principal_dir }}
         ANDROID_FILES: ${{ inputs.remove_android }}
