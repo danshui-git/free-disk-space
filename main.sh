@@ -1,30 +1,30 @@
 #!/bin/bash
 
 # ---
-# Script to FreeUP Disk Space on Linux Systems
-# Author: Enderson Menezes
-# Date: 2024-02-16
-# Inspired by: https://github.com/jlumbroso/free-disk-space
+# 用于Linux系统的磁盘空间清理脚本
+# 作者: Enderson Menezes
+# 日期: 2024-02-16
+# 灵感来源: https://github.com/jlumbroso/free-disk-space
 # ---
 
-# Variables
-# PRINCIPAL_DIR: String
-# TESTING: Boolean (true or false)
-# ANDROID_FILES: Boolean (true or false)
-# DOTNET_FILES: Boolean (true or false)
-# HASKELL_FILES: Boolean (true or false)
-# TOOL_CACHE: Boolean (true or false)
-# SWAP_STORAGE: Boolean (true or false)
-# PACKAGES: String (separated by space)
-# REMOVE_ONE_COMMAND: Boolean (true or false)
-# REMOVE_FOLDERS: String (separated by space)
+# 变量
+# PRINCIPAL_DIR: 字符串
+# TESTING: 布尔值 (true 或 false)
+# ANDROID_FILES: 布尔值 (true 或 false)
+# DOTNET_FILES: 布尔值 (true 或 false)
+# HASKELL_FILES: 布尔值 (true 或 false)
+# TOOL_CACHE: 布尔值 (true 或 false)
+# SWAP_STORAGE: 布尔值 (true 或 false)
+# PACKAGES: 字符串 (以空格分隔)
+# REMOVE_ONE_COMMAND: 布尔值 (true 或 false)
+# REMOVE_FOLDERS: 字符串 (以空格分隔)
 
-# Environment Variables
-# AGENT_TOOLSDIRECTORY: String
+# 环境变量
+# AGENT_TOOLSDIRECTORY: 字符串
 
-# Validate Variables
+# 验证变量
 if [[ -z "${PRINCIPAL_DIR}" ]]; then
-    echo "Variable PRINCIPAL_DIR is not set"
+    echo "未设置PRINCIPAL_DIR变量"
     exit 0
 fi
 if [[ -z "${TESTING}" ]]; then
@@ -34,56 +34,56 @@ if [[ -z "${REMOVE_DOCKER}" ]]; then
     REMOVE_DOCKER="false"
 fi
 if [[ ${TESTING} == "true" ]]; then
-    echo "Testing Mode"
+    echo "测试模式"
     alias rm='echo rm'
 fi
 if [[ -z "${ANDROID_FILES}" ]]; then
-    echo "Variable ANDROID_FILES is not set"
+    echo "未设置ANDROID_FILES变量"
     exit 0
 fi
 if [[ -z "${DOTNET_FILES}" ]]; then
-    echo "Variable DOTNET_FILES is not set"
+    echo "未设置DOTNET_FILES变量"
     exit 0
 fi
 if [[ -z "${HASKELL_FILES}" ]]; then
-    echo "Variable HASKELL_FILES is not set"
+    echo "未设置HASKELL_FILES变量"
     exit 0
 fi
 if [[ -z "${TOOL_CACHE}" ]]; then
-    echo "Variable TOOL_CACHE is not set"
+    echo "未设置TOOL_CACHE变量"
     exit 0
 fi
 if [[ -z "${SWAP_STORAGE}" ]]; then
-    echo "Variable SWAP_STORAGE is not set"
+    echo "未设置SWAP_STORAGE变量"
     exit 0
 fi
 if [[ -z "${PACKAGES}" ]]; then
-    echo "Variable PACKAGES is not set"
+    echo "未设置PACKAGES变量"
     exit 0
 fi
 if [[ ${PACKAGES} != "false" ]]; then
     if [[ ${PACKAGES} != *" "* ]]; then
-        echo "Variable PACKAGES is not a list of strings"
+        echo "PACKAGES变量不是字符串列表"
         exit 0
     fi
 fi
 if [[ -z "${REMOVE_ONE_COMMAND}" ]]; then
-    echo "Variable REMOVE_ONE_COMMAND is not set"
+    echo "未设置REMOVE_ONE_COMMAND变量"
     exit 0
 fi
 if [[ -z "${REMOVE_FOLDERS}" ]]; then
-    echo "Variable REMOVE_FOLDERS is not set"
+    echo "未设置REMOVE_FOLDERS变量"
     exit 0
 fi
 if [[ -z "${AGENT_TOOLSDIRECTORY}" ]]; then
-    echo "Variable AGENT_TOOLSDIRECTORY is not set"
+    echo "未设置AGENT_TOOLSDIRECTORY变量"
     exit 0
 fi
 
-# Global Variables
+# 全局变量
 TOTAL_FREE_SPACE=0
 
-# Verify Needed Packages
+# 验证所需软件包
 
 function verify_free_disk_space(){
     FREE_SPACE_TMP=$(df -B1 "${PRINCIPAL_DIR}")
@@ -108,15 +108,15 @@ function update_and_echo_free_space(){
         SPACE_AFTER=$(verify_free_space_in_mb)
         LINUX_TIMESTAMP_AFTER=$(date +%s)
         FREEUP_SPACE=$(awk -v after="$SPACE_AFTER" -v before="$SPACE_BEFORE" 'BEGIN{printf "%.2f", after-before}')
-        echo "FreeUp Space: ${FREEUP_SPACE} MB"
-        echo "Time Elapsed: $((LINUX_TIMESTAMP_AFTER - LINUX_TIMESTAMP_BEFORE)) seconds"
+        echo "释放空间: ${FREEUP_SPACE} MB"
+        echo "耗时: $((LINUX_TIMESTAMP_AFTER - LINUX_TIMESTAMP_BEFORE)) 秒"
         TOTAL_FREE_SPACE=$(awk -v total="$TOTAL_FREE_SPACE" -v free="$FREEUP_SPACE" 'BEGIN{printf "%.2f", total+free}')
     fi
 }
 
 function remove_android_library_folder(){
     echo "-"
-    echo "🤖 Removing Android Folder"
+    echo "📚 正在删除Android文件夹"
     update_and_echo_free_space "before"
     sudo rm -rf /usr/local/lib/android || true
     update_and_echo_free_space "after"
@@ -124,7 +124,7 @@ function remove_android_library_folder(){
 }
 
 function remove_dot_net_library_folder(){
-    echo "📄 Removing .NET Folder"
+    echo "📚 正在删除.NET文件夹"
     update_and_echo_free_space "before"
     sudo rm -rf /usr/share/dotnet || true
     update_and_echo_free_space "after"
@@ -132,7 +132,7 @@ function remove_dot_net_library_folder(){
 }
 
 function remove_haskell_library_folder(){
-    echo "📄 Removing Haskell Folder"
+    echo "📚 正在删除Haskell文件夹"
     update_and_echo_free_space "before"
     sudo rm -rf /opt/ghc || true
     sudo rm -rf /usr/local/.ghcup || true
@@ -142,7 +142,7 @@ function remove_haskell_library_folder(){
 
 function remove_package(){
     PACKAGE_NAME=$1
-    echo "📦 Removing ${PACKAGE_NAME}"
+    echo "📚 正在删除 ${PACKAGE_NAME}"
     update_and_echo_free_space "before"
     sudo apt-get remove -y "${PACKAGE_NAME}" --fix-missing > /dev/null
     sudo apt-get autoremove -y > /dev/null
@@ -157,7 +157,7 @@ function remove_multi_packages_one_command(){
     for PACKAGE in ${PACKAGES_TO_REMOVE}; do
         MOUNT_COMMAND+=" ${PACKAGE}"
     done
-    echo "📦 Removing ${PACKAGES_TO_REMOVE}"
+    echo "🗃️ 正在批量删除软件包: ${PACKAGES_TO_REMOVE}"
     update_and_echo_free_space "before"
     ${MOUNT_COMMAND} --fix-missing > /dev/null
     sudo apt-get autoremove -y > /dev/null
@@ -167,7 +167,7 @@ function remove_multi_packages_one_command(){
 }
 
 function remove_tool_cache(){
-    echo "🧹 Removing Tool Cache"
+    echo "📇 正在删除工具缓存"
     update_and_echo_free_space "before"
     sudo rm -rf "${AGENT_TOOLSDIRECTORY}" || true
     update_and_echo_free_space "after"
@@ -175,31 +175,34 @@ function remove_tool_cache(){
 }
 
 function remove_swap_storage(){
-    # eye emoji see swap
-    echo "👁️‍🗨️ See Swap"
+    # 眼睛表情查看交换空间
+    echo "🔎 查看交换空间"
     free -h
-    echo "🧹 Removing Swap Storage"
+    echo "🧹 正在删除交换空间"
     sudo swapoff -a || true
     sudo rm -f "/mnt/swapfile" || true
-    echo "🧹 Removed Swap Storage"
+    echo "🧹 已删除交换空间"
     free -h
     echo "-"
 }
 
 function remove_folder(){
     FOLDER=$1
-    echo "📁 Removing ${FOLDER}"
+    echo "📁 正在删除文件夹: ${FOLDER}"
     update_and_echo_free_space "before"
     sudo rm -rf "${FOLDER}" || true
     update_and_echo_free_space "after"
 }
 
 function remove_docker_image(){
-    echo "📁 Removing docker image"
-    sudo docker image prune --all --force
+    echo "📁 正在删除Docker镜像"
+    update_and_echo_free_space "before"
+    sudo docker image prune --all --force > /dev/null 2>&1
+    update_and_echo_free_space "after"
+    echo "-"
 }
 
-# Remove Libraries
+# 删除库文件
 if [[ ${ANDROID_FILES} == "true" ]]; then
     remove_android_library_folder
 fi
@@ -232,4 +235,4 @@ fi
 if [[ ${REMOVE_DOCKER} == "true" ]]; then
     remove_docker_image
 fi
-echo "Total Free Space: ${TOTAL_FREE_SPACE} MB"
+echo "✅️ 总共释放空间: ${TOTAL_FREE_SPACE} MB"
