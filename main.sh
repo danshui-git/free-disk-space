@@ -2,96 +2,114 @@
 
 # ---
 # 用于Linux系统的磁盘空间清理脚本
-# 作者: Enderson Menezes
+# 原作者: Enderson Menezes
 # 日期: 2024-02-16
 # 灵感来源: https://github.com/jlumbroso/free-disk-space
 # ---
-
-# 变量
-# PRINCIPAL_DIR: 字符串
-# TESTING: 布尔值 (true 或 false)
-# ANDROID_FILES: 布尔值 (true 或 false)
-# DOTNET_FILES: 布尔值 (true 或 false)
-# HASKELL_FILES: 布尔值 (true 或 false)
-# TOOL_CACHE: 布尔值 (true 或 false)
-# SWAP_STORAGE: 布尔值 (true 或 false)
-# PACKAGES: 字符串 (以空格分隔)
-# REMOVE_ONE_COMMAND: 布尔值 (true 或 false)
-# REMOVE_FOLDERS: 字符串 (以空格分隔)
-
-# 环境变量
-# AGENT_TOOLSDIRECTORY: 字符串
-
-# 验证变量
-if [[ -z "${PRINCIPAL_DIR}" ]]; then
-    echo "未设置PRINCIPAL_DIR变量"
-    exit 0
-fi
-if [[ -z "${TESTING}" ]]; then
-    TESTING="false"
-fi
-if [[ -z "${REMOVE_DOCKER}" ]]; then
-    REMOVE_DOCKER="false"
-fi
-if [[ ${TESTING} == "true" ]]; then
-    echo "测试模式"
-    alias rm='echo rm'
-fi
-if [[ -z "${ANDROID_FILES}" ]]; then
-    echo "未设置ANDROID_FILES变量"
-    exit 0
-fi
-if [[ -z "${DOTNET_FILES}" ]]; then
-    echo "未设置DOTNET_FILES变量"
-    exit 0
-fi
-if [[ -z "${HASKELL_FILES}" ]]; then
-    echo "未设置HASKELL_FILES变量"
-    exit 0
-fi
-if [[ -z "${TOOL_CACHE}" ]]; then
-    echo "未设置TOOL_CACHE变量"
-    exit 0
-fi
-if [[ -z "${SWAP_STORAGE}" ]]; then
-    echo "未设置SWAP_STORAGE变量"
-    exit 0
-fi
-if [[ -z "${PACKAGES}" ]]; then
-    echo "未设置PACKAGES变量"
-    exit 0
-fi
-if [[ ${PACKAGES} != "false" ]]; then
-    if [[ ${PACKAGES} != *" "* ]]; then
-        echo "PACKAGES变量不是字符串列表"
-        exit 0
-    fi
-fi
-if [[ -z "${REMOVE_ONE_COMMAND}" ]]; then
-    echo "未设置REMOVE_ONE_COMMAND变量"
-    exit 0
-fi
-if [[ -z "${REMOVE_FOLDERS}" ]]; then
-    echo "未设置REMOVE_FOLDERS变量"
-    exit 0
-fi
-if [[ -z "${AGENT_TOOLSDIRECTORY}" ]]; then
-    echo "未设置AGENT_TOOLSDIRECTORY变量"
-    exit 0
-fi
+# 由281677160二次修改，修改内容如下
+# 1、改进释放磁盘空间放量的计算
+# 2、改进交换空间释放量的计算
+# 3、增加删除Docker镜像
+# ---
 
 # 全局变量
 TOTAL_FREE_SPACE=0
+TOTAL_SWAP_SPACE=0
+CURRENT_SWAP_SIZE=0
 
-# 验证所需软件包
+# 设置提示字体颜色
+STEPS="[\033[93m 执行 \033[0m]"
+INFO="[\033[94m 信息 \033[0m]"
+NOTE="[\033[92m 结果 \033[0m]"
+ERROR="[\033[91m 错误 \033[0m]"
+error_msg() {
+    echo -e "${ERROR} ${1}"
+    exit 1
+}
+
+# 验证变量函数
+function validate_boolean() {
+    local var="$1" param_name="$2"
+    if [[ ! "$var" =~ ^(true|false)$ ]]; then
+        error_msg "参数 $param_name 的值: $var 无效，必须是 'true' 或 'false'"
+    fi
+}
+
+# 验证变量函数
+function validate_packages() {
+    local var="$1" param_name="$2"
+    if [[ "$var" =~ ^(true|false)$ ]]; then
+        declare -g "$param_name"=""
+    fi
+}
+
+# 获取交换空间大小（以 KB 为单位）
+function get_swap_space() {
+    local swap_size=$(swapon --show=SIZE --noheadings --raw)
+    if [[ -z "$swap_size" ]]; then
+        echo 0
+    else
+        # 将带有单位的大小转换为纯数字（以 KB 为单位）
+        if [[ "$swap_size" =~ ^([0-9]+)([kMG])$ ]]; then
+            local value=${BASH_REMATCH[1]}
+            local unit=${BASH_REMATCH[2]}
+            case "$unit" in
+                k) echo "$value" ;;
+                M) echo $((value * 1024)) ;;
+                G) echo $((value * 1024 * 1024)) ;;
+                *) echo 0 ;;
+            esac
+        else
+            echo 0
+        fi
+    fi
+}
+
+# 将KB转换为MB
+function convert_kb_to_mb() {
+    awk -v kb="$1" 'BEGIN{printf "%.2f", kb/1024}'
+}
+
+# 将字节转换为MB
+function convert_bytes_to_mb() {
+    awk -v bytes="$1" 'BEGIN{printf "%.2f", bytes/1024/1024}'
+}
+
+# 验证变量
+function init_var() {
+    # 参数验证 (true 或 false)
+    validate_boolean "$remove_android" "remove_android"
+    validate_boolean "$remove_dotnet" "remove_dotnet"
+    validate_boolean "$remove_haskell" "remove_haskell"
+    validate_boolean "$remove_tool_cache" "remove_tool_cache"
+    validate_boolean "$remove_swap" "remove_swap"
+    validate_boolean "$remove_docker_image" "remove_docker_image"
+    validate_boolean "$testing" "testing"
+
+    # 参数验证 (是否设置为true 或 false,是的话改成空值)
+    validate_packages "$remove_packages" "remove_packages"
+    validate_packages "$remove_folders" "remove_folders"
+
+    # 设置系统路径
+    PRINCIPAL_DIR="${principal_dir}"
+
+    echo -e ""
+    echo -e "${INFO} remove_android: [ ${remove_android} ]"
+    echo -e "${INFO} remove_dotnet: [ ${remove_dotnet} ]"
+    echo -e "${INFO} remove_haskell: [ ${remove_haskell} ]"
+    echo -e "${INFO} remove_tool_cache: [ ${remove_tool_cache} ]"
+    echo -e "${INFO} remove_swap: [ ${remove_swap} ]"
+    echo -e "${INFO} remove_docker_image: [ ${remove_docker_image} ]"
+    echo -e "${INFO} testing: [ ${testing} ]"
+    echo -e "${INFO} remove_packages: [ ${remove_packages} ]"
+    echo -e "${INFO} remove_folders: [ ${remove_folders} ]"
+    echo -e ""
+    echo "➖"
+}
 
 function verify_free_disk_space(){
     FREE_SPACE_TMP=$(df -B1 "${PRINCIPAL_DIR}")
     echo "${FREE_SPACE_TMP}" | awk 'NR==2 {print $4}'
-}
-
-function convert_bytes_to_mb(){
-    awk -v bytes="$1" 'BEGIN{printf "%.2f", bytes/1024/1024}'
 }
 
 function verify_free_space_in_mb(){
@@ -100,145 +118,152 @@ function verify_free_space_in_mb(){
 }
 
 function update_and_echo_free_space(){
-    IS_AFTER_OR_BEFORE=$1
+    OPERATION=$1
+    IS_AFTER_OR_BEFORE=$2
+    
     if [[ "${IS_AFTER_OR_BEFORE}" == "before" ]]; then
-        SPACE_BEFORE=$(verify_free_space_in_mb)
-        LINUX_TIMESTAMP_BEFORE=$(date +%s)
+        if [[ "${OPERATION}" == "disk" ]]; then
+            SPACE_BEFORE=$(verify_free_space_in_mb)
+            LINUX_TIMESTAMP_BEFORE=$(date +%s)
+        elif [[ "${OPERATION}" == "swap" ]]; then
+            # 保存当前交换空间大小
+            CURRENT_SWAP_SIZE=$(get_swap_space)
+            LINUX_TIMESTAMP_BEFORE=$(date +%s)
+        fi
     else
-        SPACE_AFTER=$(verify_free_space_in_mb)
-        LINUX_TIMESTAMP_AFTER=$(date +%s)
-        FREEUP_SPACE=$(awk -v after="$SPACE_AFTER" -v before="$SPACE_BEFORE" 'BEGIN{printf "%.2f", after-before}')
-        echo "释放空间: ${FREEUP_SPACE} MB"
+        if [[ "${OPERATION}" == "disk" ]]; then
+            SPACE_AFTER=$(verify_free_space_in_mb)
+            LINUX_TIMESTAMP_AFTER=$(date +%s)
+            FREEUP_SPACE=$(awk -v after="$SPACE_AFTER" -v before="$SPACE_BEFORE" 'BEGIN{printf "%.2f", after-before}')
+            echo "释放磁盘空间: ${FREEUP_SPACE} MB"
+            TOTAL_FREE_SPACE=$(awk -v total="$TOTAL_FREE_SPACE" -v free="$FREEUP_SPACE" 'BEGIN{printf "%.2f", total+free}')
+        elif [[ "${OPERATION}" == "swap" ]]; then
+            # 交换空间已经关闭，使用之前保存的CURRENT_SWAP_SIZE
+            LINUX_TIMESTAMP_AFTER=$(date +%s)
+            # 转换KB到MB
+            FREEUP_SPACE=$(convert_kb_to_mb "$CURRENT_SWAP_SIZE")
+            echo "释放交换空间: ${FREEUP_SPACE} MB"
+            TOTAL_SWAP_SPACE=$(awk -v total="$TOTAL_SWAP_SPACE" -v free="$FREEUP_SPACE" 'BEGIN{printf "%.2f", total+free}')
+            # 重置CURRENT_SWAP_SIZE
+            CURRENT_SWAP_SIZE=0
+        fi
         echo "耗时: $((LINUX_TIMESTAMP_AFTER - LINUX_TIMESTAMP_BEFORE)) 秒"
-        TOTAL_FREE_SPACE=$(awk -v total="$TOTAL_FREE_SPACE" -v free="$FREEUP_SPACE" 'BEGIN{printf "%.2f", total+free}')
     fi
 }
 
-function remove_android_library_folder(){
-    echo "-"
-    echo "📚 正在删除Android文件夹"
-    update_and_echo_free_space "before"
+function remove_android(){
+    echo -e "${STEPS} 📚 删除Android文件夹"
+    update_and_echo_free_space "disk" "before"
     sudo rm -rf /usr/local/lib/android || true
-    update_and_echo_free_space "after"
-    echo "-"
+    update_and_echo_free_space "disk" "after"
+    echo "➖"
 }
 
-function remove_dot_net_library_folder(){
-    echo "📚 正在删除.NET文件夹"
-    update_and_echo_free_space "before"
+function remove_dotnet(){
+    echo -e "${STEPS} 📚 删除.NET文件夹"
+    update_and_echo_free_space "disk" "before"
     sudo rm -rf /usr/share/dotnet || true
-    update_and_echo_free_space "after"
-    echo "-"
+    update_and_echo_free_space "disk" "after"
+    echo "➖"
 }
 
-function remove_haskell_library_folder(){
-    echo "📚 正在删除Haskell文件夹"
-    update_and_echo_free_space "before"
+function remove_haskell(){
+    echo -e "${STEPS} 📚 删除Haskell文件夹"
+    update_and_echo_free_space "disk" "before"
     sudo rm -rf /opt/ghc || true
+    sudo rm -rf /opt/hostedtoolcache/CodeQL || true
     sudo rm -rf /usr/local/.ghcup || true
-    update_and_echo_free_space "after"
-    echo "-"
+    update_and_echo_free_space "disk" "after"
+    echo "➖"
 }
 
-function remove_package(){
-    PACKAGE_NAME=$1
-    echo "📚 正在删除 ${PACKAGE_NAME}"
-    update_and_echo_free_space "before"
-    sudo apt-get remove -y "${PACKAGE_NAME}" --fix-missing > /dev/null
-    sudo apt-get autoremove -y > /dev/null
-    sudo apt-get clean > /dev/null
-    update_and_echo_free_space "after"
-    echo "-"
-}
-
-function remove_multi_packages_one_command(){
+function remove_packages(){
     PACKAGES_TO_REMOVE=$1
-    MOUNT_COMMAND="sudo apt-get remove -y"
-    for PACKAGE in ${PACKAGES_TO_REMOVE}; do
-        MOUNT_COMMAND+=" ${PACKAGE}"
+    PACKAGES_ARRAY=($PACKAGES_TO_REMOVE)
+    for PACKAGE in "${PACKAGES_ARRAY[@]}"; do
+       echo -e "${STEPS} 🗃️ 移除软件: ${PACKAGE}"
+       update_and_echo_free_space "disk" "before"
+       sudo apt-get remove -y "${PACKAGE}" --fix-missing > /dev/null
+       update_and_echo_free_space "disk" "after"
+       echo "➖"
     done
-    echo "🗃️ 正在批量删除软件包: ${PACKAGES_TO_REMOVE}"
-    update_and_echo_free_space "before"
-    ${MOUNT_COMMAND} --fix-missing > /dev/null
+    update_and_echo_free_space "disk" "before"
+    echo -e "${STEPS} 👝 删除多余的软件压缩包"
     sudo apt-get autoremove -y > /dev/null
     sudo apt-get clean > /dev/null
-    update_and_echo_free_space "after"
-    echo "-"
+    update_and_echo_free_space "disk" "after"
+    echo "➖"
 }
 
 function remove_tool_cache(){
-    echo "📇 正在删除工具缓存"
-    update_and_echo_free_space "before"
+    echo -e "${STEPS} 📇 删除工具缓存"
+    update_and_echo_free_space "disk" "before"
     sudo rm -rf "${AGENT_TOOLSDIRECTORY}" || true
-    update_and_echo_free_space "after"
-    echo "-"
+    update_and_echo_free_space "disk" "after"
+    echo "➖"
 }
 
 function remove_docker_image(){
-    echo "💽 正在删除Docker镜像"
-    update_and_echo_free_space "before"
+    echo -e "${STEPS} 💽 删除Docker镜像"
+    update_and_echo_free_space "disk" "before"
     sudo docker image prune --all --force > /dev/null 2>&1
-    update_and_echo_free_space "after"
-    echo "-"
+    update_and_echo_free_space "disk" "after"
+    echo "➖"
 }
 
-function remove_swap_storage(){
-    # 眼睛表情查看交换空间
-    echo "🔎 查看交换空间"
-    free -h
-    echo "🧹 正在删除交换空间"
+function remove_swap(){
+    echo -e "${STEPS} 🧹 删除交换空间"
+    update_and_echo_free_space "swap" "before"
+    CURRENT_SWAP_SIZE=$(get_swap_space)
     sudo swapoff -a || true
     sudo rm -f "/mnt/swapfile" || true
-    echo "🧹 已删除交换空间"
-    free -h
-    echo "-"
+    update_and_echo_free_space "swap" "after"
+    echo "➖"
 }
 
-function remove_folder(){
+function remove_folders(){
     FOLDER=$1
-    echo "🗂️ 正在删除文件夹: ${FOLDER}"
-    update_and_echo_free_space "before"
-    sudo rm -rf "${FOLDER}" || true
-    update_and_echo_free_space "after"
+    FILES_FOLDER=($FOLDER)
+    for FOLDER in "${FILES_FOLDER[@]}"; do
+       echo -e "${STEPS} 📂 删除文件夹: ${FOLDER}"
+       update_and_echo_free_space "disk" "before"
+       sudo rm -rf "${FOLDER}" || true
+       update_and_echo_free_space "disk" "after"
+       echo "➖"
+    done
 }
 
 function free_up_space(){
-    echo "-"
-    echo "✅️ 总共释放空间: ${TOTAL_FREE_SPACE} MB"
+    echo -e "${NOTE} ☑️ 总共释放空间: $(awk -v disk="$TOTAL_FREE_SPACE" -v swap="$TOTAL_SWAP_SPACE" 'BEGIN{printf "%.2f", disk+swap}') MB"
 }
 
+# 验证变量
+init_var "${@}"
+
 # 删除库文件
-if [[ ${ANDROID_FILES} == "true" ]]; then
-    remove_android_library_folder
+if [[ ${remove_android} == "true" ]]; then
+    remove_android
 fi
-if [[ ${DOTNET_FILES} == "true" ]]; then
-    remove_dot_net_library_folder
+if [[ ${remove_dotnet} == "true" ]]; then
+    remove_dotnet
 fi
-if [[ ${HASKELL_FILES} == "true" ]]; then
-    remove_haskell_library_folder
+if [[ ${remove_haskell} == "true" ]]; then
+    remove_haskell
 fi
-if [[ ${PACKAGES} != "false" ]]; then
-    if [[ ${REMOVE_ONE_COMMAND} == "true" ]]; then
-        remove_multi_packages_one_command "${PACKAGES}"
-    else
-        for PACKAGE in ${PACKAGES}; do
-            remove_package "${PACKAGE}"
-        done
-    fi
-fi
-if [[ ${TOOL_CACHE} == "true" ]]; then
+if [[ ${remove_tool_cache} == "true" ]]; then
     remove_tool_cache
 fi
-if [[ ${REMOVE_DOCKER} == "true" ]]; then
+if [[ ${remove_docker_image} == "true" ]]; then
     remove_docker_image
 fi
-if [[ ${SWAP_STORAGE} == "true" ]]; then
-    remove_swap_storage
+if [[ ${remove_swap} == "true" ]]; then
+    remove_swap
 fi
-if [[ ${REMOVE_FOLDERS} != "false" ]]; then
-    for FOLDER in ${REMOVE_FOLDERS}; do
-        remove_folder "${FOLDER}"
-    done
+if [[ -n "${remove_packages}" ]]; then
+    remove_packages "${remove_packages}"
+fi
+if [[ -n "${remove_folders}" ]]; then
+    remove_folders "${remove_folders}"
 fi
 
 free_up_space
