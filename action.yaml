@@ -31,22 +31,18 @@ inputs:
     description: "Remove Swap"
     required: false
     default: "false"
-  remove_docker:
+  remove_docker_image:
     description: 'Removes cached Docker images. (frees ~3 GB)'
     required: false
     default: 'false'
   remove_packages:
     description: "Remove Packages (Eg. azure-cli google-cloud-cli) Read the documentation for more information"
     required: false
-    default: "false"
-  remove_packages_one_command:
-    description: "Remove Packages (Eg. azure-cli google-cloud-cli) in one command"
-    required: false
-    default: "false"
+    default: ""
   remove_folders:
     description: "Remove Folders (Eg. /usr/share/dotnet)"
     required: false
-    default: "false"
+    default: ""
   testing:
     description: "Testing (Use to develop locally)"
     required: false
@@ -64,14 +60,13 @@ runs:
         chmod +x main.sh
         ./main.sh
       env:
-        PRINCIPAL_DIR: ${{ inputs.principal_dir }}
-        ANDROID_FILES: ${{ inputs.remove_android }}
-        DOTNET_FILES: ${{ inputs.remove_dotnet }}
-        HASKELL_FILES: ${{ inputs.remove_haskell }}
-        TOOL_CACHE: ${{ inputs.remove_tool_cache }}
-        SWAP_STORAGE: ${{ inputs.remove_swap }}
-        REMOVE_DOCKER: ${{ inputs.remove_docker }}
-        PACKAGES: ${{ inputs.remove_packages }}
-        REMOVE_ONE_COMMAND: ${{ inputs.remove_packages_one_command }}
-        REMOVE_FOLDERS: ${{ inputs.remove_folders }}
-        TESTING: ${{ inputs.testing }}
+        principal_dir: ${{ inputs.principal_dir }}
+        remove_android: ${{ inputs.remove_android }}
+        remove_dotnet: ${{ inputs.remove_dotnet }}
+        remove_haskell: ${{ inputs.remove_haskell }}
+        remove_tool_cache: ${{ inputs.remove_tool_cache }}
+        remove_swap: ${{ inputs.remove_swap }}
+        remove_docker_image: ${{ inputs.remove_docker_image }}
+        remove_packages: ${{ inputs.remove_packages }}
+        remove_folders: ${{ inputs.remove_folders }}
+        testing: ${{ inputs.testing }}
