@@ -161,7 +161,7 @@ function update_and_echo_free_space(){
 }
 
 function remove_android(){
-    echo -e "${STEPS} 📚 删除Android文件夹"
+    echo -e "${STEPS} 📁 删除Android文件夹"
     update_and_echo_free_space "disk" "before"
     sudo rm -rf /usr/local/lib/android || true
     update_and_echo_free_space "disk" "after"
@@ -169,7 +169,7 @@ function remove_android(){
 }
 
 function remove_dotnet(){
-    echo -e "${STEPS} 📚 删除.NET文件夹"
+    echo -e "${STEPS} 📁 删除.NET文件夹"
     update_and_echo_free_space "disk" "before"
     sudo rm -rf /usr/share/dotnet || true
     update_and_echo_free_space "disk" "after"
@@ -177,7 +177,7 @@ function remove_dotnet(){
 }
 
 function remove_haskell(){
-    echo -e "${STEPS} 📚 删除Haskell文件夹"
+    echo -e "${STEPS} 📁 删除Haskell文件夹"
     update_and_echo_free_space "disk" "before"
     sudo rm -rf /opt/ghc || true
     sudo rm -rf /opt/hostedtoolcache/CodeQL || true
@@ -197,7 +197,7 @@ function remove_packages(){
        echo "➖"
     done
     update_and_echo_free_space "disk" "before"
-    echo -e "${STEPS} 👝 删除多余的软件压缩包"
+    echo -e "${STEPS} 📚 删除多余的软件压缩包"
     sudo apt-get autoremove -y > /dev/null
     sudo apt-get clean > /dev/null
     update_and_echo_free_space "disk" "after"
@@ -213,7 +213,7 @@ function remove_tool_cache(){
 }
 
 function remove_docker_image(){
-    echo -e "${STEPS} 💽 删除Docker镜像"
+    echo -e "${STEPS} 💿 删除Docker镜像"
     update_and_echo_free_space "disk" "before"
     sudo docker image prune --all --force > /dev/null 2>&1
     update_and_echo_free_space "disk" "after"
