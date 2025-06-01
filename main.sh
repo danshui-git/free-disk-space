@@ -77,6 +77,15 @@ function convert_bytes_to_mb() {
 
 # 验证变量
 function init_var() {
+    # 应用参数，同时删除空白字符(包括空格、制表符和换行符)
+    remove_android=$(echo "${remove_android}" | tr -d '[:space:]')
+    remove_dotnet=$(echo "${remove_dotnet}" | tr -d '[:space:]')
+    remove_haskell=$(echo "${remove_haskell}" | tr -d '[:space:]')
+    remove_tool_cache=$(echo "${remove_tool_cache}" | tr -d '[:space:]')
+    remove_swap=$(echo "${remove_swap}" | tr -d '[:space:]')
+    remove_docker_image=$(echo "${remove_docker_image}" | tr -d '[:space:]')
+    testing=$(echo "${testing}" | tr -d '[:space:]')
+
     # 参数验证 (true 或 false)
     validate_boolean "$remove_android" "remove_android"
     validate_boolean "$remove_dotnet" "remove_dotnet"
