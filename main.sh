@@ -38,7 +38,7 @@ function validate_boolean() {
 # 验证变量函数
 function validate_packages() {
     local var="$1" param_name="$2"
-    if [[ "$var" =~ ^(true|false)$ ]]; then
+    if [[ "$var" =~ (true|false)$ ]]; then
         declare -g "$param_name"=""
     fi
 }
