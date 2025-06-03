@@ -85,15 +85,15 @@ function convert_bytes_to_mb() {
 # 验证变量
 function init_var() {
     # 验证并清理输入参数
-    remove_android=$(validate_input "${{ inputs.remove_android }}" "remove_android" "boolean")
-    remove_dotnet=$(validate_input "${{ inputs.remove_dotnet }}" "remove_dotnet" "boolean")
-    remove_haskell=$(validate_input "${{ inputs.remove_haskell }}" "remove_haskell" "boolean")
-    remove_tool_cache=$(validate_input "${{ inputs.remove_tool_cache }}" "remove_tool_cache" "boolean")
-    remove_swap=$(validate_input "${{ inputs.remove_swap }}" "remove_swap" "boolean")
-    remove_docker_image=$(validate_input "${{ inputs.remove_docker_image }}" "remove_docker_image" "boolean")
-    testing=$(validate_input "${{ inputs.testing }}" "testing" "boolean")
-    remove_packages=$(validate_input "${{ inputs.remove_packages }}" "remove_packages" "keyword")
-    remove_folders=$(validate_input "${{ inputs.remove_folders }}" "remove_folders" "keyword")
+    remove_android=$(validate_input "${remove_android}" "remove_android" "boolean")
+    remove_dotnet=$(validate_input "${remove_dotnet}" "remove_dotnet" "boolean")
+    remove_haskell=$(validate_input "${remove_haskell}" "remove_haskell" "boolean")
+    remove_tool_cache=$(validate_input "${remove_tool_cache}" "remove_tool_cache" "boolean")
+    remove_swap=$(validate_input "${remove_swap}" "remove_swap" "boolean")
+    remove_docker_image=$(validate_input "${remove_docker_image}" "remove_docker_image" "boolean")
+    testing=$(validate_input "${testing}" "testing" "boolean")
+    remove_packages=$(validate_input "${remove_packages}" "remove_packages" "keyword")
+    remove_folders=$(validate_input "${remove_folders}" "remove_folders" "keyword")
 
     # 设置系统路径
     PRINCIPAL_DIR="${principal_dir}"
