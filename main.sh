@@ -98,8 +98,7 @@ function init_var() {
     # 设置系统路径
     PRINCIPAL_DIR="${principal_dir}"
 
-    echo -e ""
-    echo -e "${INFO} remove_android: [ ${remove_android} ]"
+    echo -e "\n${INFO} remove_android: [ ${remove_android} ]"
     echo -e "${INFO} remove_dotnet: [ ${remove_dotnet} ]"
     echo -e "${INFO} remove_haskell: [ ${remove_haskell} ]"
     echo -e "${INFO} remove_tool_cache: [ ${remove_tool_cache} ]"
@@ -107,8 +106,7 @@ function init_var() {
     echo -e "${INFO} remove_docker_image: [ ${remove_docker_image} ]"
     echo -e "${INFO} testing: [ ${testing} ]"
     echo -e "${INFO} remove_packages: [ ${remove_packages} ]"
-    echo -e "${INFO} remove_folders: [ ${remove_folders} ]"
-    echo -e ""
+    echo -e "${INFO} remove_folders: [ ${remove_folders} ]\n"
     echo "➖"
 }
 
