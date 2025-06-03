@@ -31,7 +31,6 @@ validate_input() {
     local var="$1"
     local param_name="$2"
     local type="$3"
-
     case "$type" in
     boolean)
         var=$(echo "$var" | tr -d '[:space:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
@@ -45,7 +44,6 @@ validate_input() {
         error_msg "未知的验证类型: $type"
         ;;
     esac
-
     echo "$var"
 }
 
