@@ -32,10 +32,9 @@ validate_input() {
     local param_name="$2"
     local type="$3"
 
-    var=$(echo "$var" | tr -d '[:space:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-
     case "$type" in
     boolean)
+        var=$(echo "$var" | tr -d '[:space:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         [[ ! "$var" =~ ^(true|false)$ ]] && 
         error_msg "参数 $param_name 的值: '$var' 无效，必须是 'true' 或 'false'"
         ;;
