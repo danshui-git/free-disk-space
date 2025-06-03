@@ -27,20 +27,27 @@ error_msg() {
     exit 1
 }
 
-# 验证变量函数
-function validate_boolean() {
-    local var="$1" param_name="$2"
-    if [[ ! "$var" =~ ^(true|false)$ ]]; then
-        error_msg "参数 $param_name 的值: $var 无效，必须是 'true' 或 'false'"
-    fi
-}
+validate_input() {
+    local var="$1"
+    local param_name="$2"
+    local type="$3"
 
-# 验证变量函数
-function validate_packages() {
-    local var="$1" param_name="$2"
-    if [[ "$var" =~ ^(true|false)$ ]]; then
-        declare -g "$param_name"=""
-    fi
+    var=$(echo "$var" | tr -d '[:space:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+    case "$type" in
+    boolean)
+        [[ ! "$var" =~ ^(true|false)$ ]] && 
+        error_msg "参数 $param_name 的值: '$var' 无效，必须是 'true' 或 'false'"
+        ;;
+    keyword)
+        [[ "$var" =~ ^(true|false)$ ]] && var=""
+        ;;
+    *)
+        error_msg "未知的验证类型: $type"
+        ;;
+    esac
+
+    echo "$var"
 }
 
 # 获取交换空间大小（以 KB 为单位）
@@ -77,27 +84,16 @@ function convert_bytes_to_mb() {
 
 # 验证变量
 function init_var() {
-    # 应用参数，同时删除空白字符(包括空格、制表符和换行符)
-    remove_android=$(echo "${remove_android}" | tr -d '[:space:]')
-    remove_dotnet=$(echo "${remove_dotnet}" | tr -d '[:space:]')
-    remove_haskell=$(echo "${remove_haskell}" | tr -d '[:space:]')
-    remove_tool_cache=$(echo "${remove_tool_cache}" | tr -d '[:space:]')
-    remove_swap=$(echo "${remove_swap}" | tr -d '[:space:]')
-    remove_docker_image=$(echo "${remove_docker_image}" | tr -d '[:space:]')
-    testing=$(echo "${testing}" | tr -d '[:space:]')
-
-    # 参数验证 (true 或 false)
-    validate_boolean "$remove_android" "remove_android"
-    validate_boolean "$remove_dotnet" "remove_dotnet"
-    validate_boolean "$remove_haskell" "remove_haskell"
-    validate_boolean "$remove_tool_cache" "remove_tool_cache"
-    validate_boolean "$remove_swap" "remove_swap"
-    validate_boolean "$remove_docker_image" "remove_docker_image"
-    validate_boolean "$testing" "testing"
-
-    # 参数验证 (是否设置为true 或 false,是的话改成空值)
-    validate_packages "$remove_packages" "remove_packages"
-    validate_packages "$remove_folders" "remove_folders"
+    # 验证并清理输入参数
+    remove_android=$(validate_input "${{ inputs.remove_android }}" "remove_android" "boolean")
+    remove_dotnet=$(validate_input "${{ inputs.remove_dotnet }}" "remove_dotnet" "boolean")
+    remove_haskell=$(validate_input "${{ inputs.remove_haskell }}" "remove_haskell" "boolean")
+    remove_tool_cache=$(validate_input "${{ inputs.remove_tool_cache }}" "remove_tool_cache" "boolean")
+    remove_swap=$(validate_input "${{ inputs.remove_swap }}" "remove_swap" "boolean")
+    remove_docker_image=$(validate_input "${{ inputs.remove_docker_image }}" "remove_docker_image" "boolean")
+    testing=$(validate_input "${{ inputs.testing }}" "testing" "boolean")
+    remove_packages=$(validate_input "${{ inputs.remove_packages }}" "remove_packages" "keyword")
+    remove_folders=$(validate_input "${{ inputs.remove_folders }}" "remove_folders" "keyword")
 
     # 设置系统路径
     PRINCIPAL_DIR="${principal_dir}"
